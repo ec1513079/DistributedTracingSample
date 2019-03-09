@@ -11,10 +11,10 @@ namespace FunctionApp1
 {
     public static class Function1
     {
-        [FunctionName("Function1")]
+        [FunctionName("HttpFunction1")]
         public static IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest req, TraceWriter log)
         {
-            log.Info("C# HTTP trigger function processed a request.");
+            log.Info($"HttpFunction1 C# HTTP trigger function processed a request.");
 
             string name = req.Query["name"];
 
