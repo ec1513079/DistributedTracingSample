@@ -18,7 +18,9 @@ namespace FunctionApp1
         static HttpClient httpClient = new HttpClient();
 
         [FunctionName("HttpFunction1")]
-        public static async Task<IActionResult> HttpFunction1([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest req, TraceWriter log)
+        public static async Task<IActionResult> HttpFunction1(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest req,
+            TraceWriter log)
         {
             log.Info($"HttpFunction1 C# HTTP trigger function processed a request.");
 
@@ -28,6 +30,7 @@ namespace FunctionApp1
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
             
+            // test call to HttoFunctiojn2
             var response = await httpClient.PostAsync($"{req.Scheme}://{req.Host}/api/{nameof(HttpFunction2)}"
                 , new StringContent(JsonConvert.SerializeObject(new { name = name }), Encoding.UTF8, @"application/json"));
 
@@ -37,7 +40,9 @@ namespace FunctionApp1
         }
         
         [FunctionName("HttpFunction2")]
-        public static async Task<IActionResult> HttpFunction2([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest req, TraceWriter log)
+        public static async Task<IActionResult> HttpFunction2(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequest req,
+            TraceWriter log)
         {
             log.Info($"HttpFunction1 C# HTTP trigger function processed a request.");
 
@@ -46,6 +51,10 @@ namespace FunctionApp1
             string requestBody = new StreamReader(req.Body).ReadToEnd();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
+
+            // test call to httpbin
+            var response = await httpClient.GetAsync("https://httpbin.org/get?show_env=1");
+            log.Info(await response.Content.ReadAsStringAsync());
 
             return name != null
                 ? (ActionResult)new OkObjectResult($"‚±‚ñ‚É‚¿‚Í, {name}")
