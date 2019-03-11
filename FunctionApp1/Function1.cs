@@ -15,11 +15,21 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System.Linq;
 using Microsoft.Azure.ServiceBus;
+using Microsoft.Extensions.Configuration;
 
 namespace FunctionApp1
 {
     public static class Function1
     {
+        static Function1()
+        {
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("local.settings.json", true)
+                .AddEnvironmentVariables();
+            Configuration = builder.Build();
+        }
+        private static IConfigurationRoot Configuration { get; }
+
         private static HttpClient httpClient = new HttpClient();
 
         [FunctionName("HttpFunction1")]
@@ -169,12 +179,10 @@ namespace FunctionApp1
                     .ReadAsStringAsync());
 
             // test call to httpbin
-            //log.LogInformation(
-            //    await (await httpClient.GetAsync($"http://localhost:7071/api/{nameof(HttpFunction4)}")).Content
-            //        .ReadAsStringAsync());
-            log.LogInformation(
-                await (await httpClient.GetAsync($"https://ec-deistibuted-tracing-sample-func.azurewebsites.net/api/{nameof(HttpFunction4)}")).Content
-                    .ReadAsStringAsync());
+            var res = await httpClient.GetAsync(new Uri(new Uri(Configuration["FunctionBaseUrl"]), $"/api/{nameof(HttpFunction4)}"));
+            if (!res.IsSuccessStatusCode)
+                throw new ApplicationException($"{context.FunctionName} has error. status: {res.StatusCode} message: {await res.Content.ReadAsStringAsync()}");
+            log.LogInformation(await res.Content.ReadAsStringAsync());
         }
 
         [FunctionName("HttpFunction4")]
@@ -197,6 +205,8 @@ namespace FunctionApp1
             log.LogInformation(
                 await (await httpClient.GetAsync($"https://httpbin.org/get?show_env={context.FunctionName}")).Content
                     .ReadAsStringAsync());
+
+            throw new Exception($"{context.FunctionName} has error");
 
             return (ActionResult) new OkObjectResult($"OK");
         }
